@@ -146,7 +146,7 @@ footer{margin-top:34px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   <div id="a2result" aria-live="polite"></div>
   <div id="a2chart" role="img" aria-label="Chart comparing e-book preference estimates across samples"></div>
   <table class="dt" id="a2table">
-    <caption>Table: your sample estimates vs the true population value (60%)</caption>
+    <caption>Table: your sample estimates vs the true population value (<span id="a2true">—</span>%)</caption>
     <thead><tr><th>Sample</th><th>Method</th><th>Size</th><th>% prefer e-books</th></tr></thead>
     <tbody id="a2rows"><tr><td colspan="4" class="small">No samples yet — draw one above.</td></tr></tbody>
   </table>
@@ -302,6 +302,7 @@ function renderA2(){
   for(let g=0;g<=100;g+=20){s+=`<line x1="${pad}" y1="${y(g)}" x2="${w-14}" y2="${y(g)}" stroke="#38434f"/><text x="${pad-8}" y="${y(g)+4}" text-anchor="end">${g}%</text>`}
   const ty=y(TRUEPOP*100);
   s+=`<line x1="${pad}" y1="${ty}" x2="${w-14}" y2="${ty}" stroke="#8fbf7f" stroke-width="2" stroke-dasharray="6 4"/><text x="${w-16}" y="${ty-6}" text-anchor="end" fill="#8fbf7f">true value ${(TRUEPOP*100).toFixed(0)}%</text>`;
+  const t=$("a2true");if(t)t.textContent=(TRUEPOP*100).toFixed(0);
   S.samples.forEach((sm,i)=>{const x=pad+30+i*Math.min(60,(w-pad-60)/Math.max(S.samples.length,1));
     s+=`<rect class="${sm.method==="fair"?"bar2":"bar"}" x="${x}" y="${y(sm.est*100)}" width="34" height="${h-pad-y(sm.est*100)}"/>`;});
   $("a2chart").innerHTML=s+"</svg>";
