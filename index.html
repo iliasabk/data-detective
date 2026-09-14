@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Detective — Can You Trust This Claim?</title>
+<meta name="description" content="A 15-minute interactive lesson on graph framing, sampling bias, and correlation vs causation. For learners around age 15.">
+<style>
+:root{
+  --bg:#14181d;--panel:#1d242c;--panel2:#232c36;--ink:#e8e4da;--muted:#a9b2bc;
+  --accent:#e0a458;--accent2:#6fb3a8;--danger:#d97b6c;--ok:#8fbf7f;--line:#38434f;
+  --focus:#ffd166;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px 64px}
+header{padding:28px 0 8px;border-bottom:2px solid var(--line);margin-bottom:20px}
+h1{font-size:1.9rem;margin:0 0 4px;letter-spacing:.5px}
+h1 .tag{color:var(--accent)}
+.sub{color:var(--muted);font-size:.95rem;margin:0}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 22px}
+nav.tabs button{flex:1 1 auto;min-width:130px;padding:11px 10px;background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:.9rem;cursor:pointer;text-align:center}
+nav.tabs button[aria-current="true"]{background:var(--panel2);color:var(--ink);border-color:var(--accent);font-weight:bold}
+nav.tabs button .done{color:var(--ok);font-weight:bold}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+h2{font-size:1.25rem;margin:0 0 10px;color:var(--accent)}
+h3{font-size:1.02rem;margin:16px 0 6px;color:var(--accent2)}
+p{margin:8px 0}
+.small{font-size:.85rem;color:var(--muted)}
+button.btn{display:inline-block;padding:10px 18px;background:var(--accent);color:#1a1206;border:none;border-radius:8px;font:inherit;font-weight:bold;font-size:.95rem;cursor:pointer;min-height:44px}
+button.btn.secondary{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+button.btn.ghost{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.quiz{margin:12px 0}
+.quiz label{display:block;padding:11px 12px;margin:7px 0;background:var(--panel2);border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:.95rem}
+.quiz input{margin-right:9px;transform:scale(1.15)}
+.quiz label.sel{border-color:var(--accent)}
+.fb{margin:12px 0;padding:12px 14px;border-radius:8px;font-size:.95rem;display:none}
+.fb.show{display:block}
+.fb.good{background:rgba(143,191,127,.13);border:1px solid var(--ok)}
+.fb.bad{background:rgba(217,123,108,.13);border:1px solid var(--danger)}
+.fb .mark{font-weight:bold;margin-right:6px}
+svg.chart{display:block;width:100%;height:auto;background:var(--panel2);border-radius:8px;margin:10px 0}
+svg text{fill:var(--muted);font-size:11px;font-family:ui-monospace,Menlo,monospace}
+svg .axislbl{fill:var(--ink);font-size:12px}
+svg .bar{fill:var(--accent)}
+svg .bar2{fill:var(--accent2)}
+svg .pt{fill:var(--accent)}
+svg .pt.alt{fill:var(--accent2)}
+table.dt{width:100%;border-collapse:collapse;font-size:.85rem;margin:10px 0}
+table.dt caption{text-align:left;color:var(--muted);font-size:.8rem;padding-bottom:6px}
+table.dt th,table.dt td{border:1px solid var(--line);padding:6px 9px;text-align:right}
+table.dt th{background:var(--panel2);color:var(--ink);text-align:right}
+table.dt th:first-child,table.dt td:first-child{text-align:left}
+details{margin:12px 0}
+summary{cursor:pointer;color:var(--accent2);font-size:.9rem;padding:6px 0}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+input[type=range]{width:220px;min-height:44px;accent-color:var(--accent)}
+input[type=text],textarea{background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:.95rem;width:100%}
+textarea{min-height:70px;resize:vertical}
+.rangeval{font-family:ui-monospace,Menlo,monospace;color:var(--accent);font-size:.9rem}
+.prog{height:6px;background:var(--panel2);border-radius:3px;margin:14px 0 0;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.summary-box{border:2px solid var(--accent);border-radius:12px;padding:22px;background:var(--panel)}
+.kbd{font-family:ui-monospace,Menlo,monospace;background:var(--panel2);padding:1px 6px;border-radius:4px;border:1px solid var(--line);font-size:.85em}
+.sr-only{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden}
+footer{margin-top:34px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:520px){h1{font-size:1.45rem}nav.tabs button{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Data Detective <span class="tag">— can you trust this claim?</span></h1>
+  <p class="sub">A 10–15 minute investigation for readers around 15. Three short cases: a dramatic chart, a suspicious survey, and a headline that confuses patterns with causes. All people, places and datasets are fictional.</p>
+  <div class="prog" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="3" aria-valuenow="0" id="progbar"><i id="progfill"></i></div>
+</header>
+
+<nav class="tabs" aria-label="Activities">
+  <button id="tab-intro" aria-current="true">Start here</button>
+  <button id="tab-a1">Case 1 · The dramatic chart</button>
+  <button id="tab-a2">Case 2 · The skewed survey</button>
+  <button id="tab-a3">Case 3 · The confusing headline</button>
+  <button id="tab-sum" disabled>Your verdict</button>
+</nav>
+
+<section id="view-intro" class="card">
+  <h2>Briefing</h2>
+  <p>You are the fact-checker for the fictional <em>Harbourview Gazette</em>. Three drafts just landed on your desk. Each hides a different way that honest-looking data can mislead:</p>
+  <ul>
+    <li><strong>Case 1 —</strong> a chart whose axis makes a small difference look enormous;</li>
+    <li><strong>Case 2 —</strong> a survey that asked the wrong people;</li>
+    <li><strong>Case 3 —</strong> two numbers that rise together, but for a hidden reason.</li>
+  </ul>
+  <p>In each case you will manipulate the evidence yourself, then write one careful sentence of your own. Nothing here asks you to distrust all data — only to look twice.</p>
+  <p class="small">Takes about 10–15 minutes. Works with keyboard alone: use <span class="kbd">Tab</span> to move and <span class="kbd">Enter</span> to choose. Your progress is kept only in this page — no account, nothing sent anywhere.</p>
+  <button class="btn" id="start">Open case 1</button>
+</section>
+
+<!-- ============ ACTIVITY 1 ============ -->
+<section id="view-a1" class="card" hidden>
+  <h2>Case 1 · The dramatic chart</h2>
+  <p>A local newsletter ran this headline: <em>"Study Group Doubles Test Gains!"</em> Their chart compared average weekly quiz improvement in two fictional study groups. Here is the same dataset they used — <strong>Harbourview Study Survey 2026</strong> (synthetic):</p>
+  <div id="a1chart" role="img" aria-label="Bar chart of mean weekly quiz-score improvement for two study groups"></div>
+  <table class="dt" id="a1table">
+    <caption>Table: mean weekly quiz-score improvement (points), fictional data</caption>
+    <thead><tr><th>Group</th><th>Mean improvement</th><th>Students</th></tr></thead>
+    <tbody>
+      <tr><td>Group A (self-study)</td><td id="a1ta">—</td><td>26</td></tr>
+      <tr><td>Group B (study group)</td><td id="a1tb">—</td><td>24</td></tr>
+    </tbody>
+  </table>
+  <h3>Try it: drag the axis</h3>
+  <p>Move the slider to change where the vertical axis starts. Watch the bars — then look at the table again.</p>
+  <div class="controls">
+    <label for="a1axis">Axis starts at <span class="rangeval" id="a1axv">0.0</span> pts</label>
+    <input type="range" id="a1axis" min="0" max="15" step="0.5" value="0" aria-describedby="a1axv">
+  </div>
+  <div class="fb" id="a1fb" role="status"></div>
+  <div class="quiz" role="radiogroup" aria-labelledby="a1q">
+    <p id="a1q"><strong>Checkpoint.</strong> When the newsletter chart started its axis at 15 pts, what actually changed?</p>
+    <label><input type="radio" name="a1" value="a"> The real difference between the groups grew larger</label>
+    <label><input type="radio" name="a1" value="b"> Only the picture changed — the numbers stayed identical</label>
+    <label><input type="radio" name="a1" value="c"> The study group's improvement became zero</label>
+  </div>
+  <div class="controls">
+    <button class="btn" id="a1check">Check</button>
+    <button class="btn ghost" id="a1hint">Hint</button>
+    <button class="btn secondary" id="a1next" disabled>Next case</button>
+  </div>
+</section>
+
+<!-- ============ ACTIVITY 2 ============ -->
+<section id="view-a2" class="card" hidden>
+  <h2>Case 2 · The skewed survey</h2>
+  <p>A blogger claims: <em>"80% of Harbourview teens prefer e-books — paper is finished."</em> They surveyed 40 people. The population: all <strong>600 students</strong> at the fictional Harbourview School — half are members of the school Coding Club, and club members strongly prefer e-books.</p>
+  <p>Draw samples yourself. Method 1 walks up to people <em>leaving the coding workshop</em>. Method 2 draws randomly from the whole school register. Repeat each and watch the estimates.</p>
+  <div class="controls">
+    <button class="btn secondary" id="a2biased">Sample 40 at the coding workshop</button>
+    <button class="btn secondary" id="a2fair">Sample 40 from the full register</button>
+    <button class="btn ghost" id="a2big">Biased sample, but ×10 bigger (400)</button>
+  </div>
+  <div id="a2result" aria-live="polite"></div>
+  <div id="a2chart" role="img" aria-label="Chart comparing e-book preference estimates across samples"></div>
+  <table class="dt" id="a2table">
+    <caption>Table: your sample estimates vs the true population value (60%)</caption>
+    <thead><tr><th>Sample</th><th>Method</th><th>Size</th><th>% prefer e-books</th></tr></thead>
+    <tbody id="a2rows"><tr><td colspan="4" class="small">No samples yet — draw one above.</td></tr></tbody>
+  </table>
+  <div class="fb" id="a2fb" role="status"></div>
+  <div class="quiz" role="radiogroup" aria-labelledby="a2q">
+    <p id="a2q"><strong>Checkpoint.</strong> The blogger's workshop sample says 80%. The register sample says about 60%. Which estimate deserves more trust — and does making the biased sample bigger fix it?</p>
+    <label><input type="radio" name="a2" value="a"> The 80% figure — more people were asked at the workshop</label>
+    <label><input type="radio" name="a2" value="b"> The register sample — and a bigger biased sample stays biased</label>
+    <label><input type="radio" name="a2" value="c"> The register sample — and making the biased sample bigger corrects it</label>
+  </div>
+  <div class="controls">
+    <button class="btn" id="a2check">Check</button>
+    <button class="btn ghost" id="a2hint">Hint</button>
+    <button class="btn secondary" id="a2next" disabled>Next case</button>
+  </div>
+</section>
+
+<!-- ============ ACTIVITY 3 ============ -->
+<section id="view-a3" class="card" hidden>
+  <h2>Case 3 · The confusing headline</h2>
+  <p>Another draft headline: <em>"Ice-Cream Sales Linked to Drowning Rise!"</em> The fictional resort town of Sunport logged both numbers for 12 months. The chart is right — they rise and fall together.</p>
+  <div id="a3chart" role="img" aria-label="Scatter chart of monthly ice-cream sales against drowning incidents, coloured by temperature band"></div>
+  <div class="controls">
+    <button class="btn secondary" id="a3strat" aria-pressed="false">Colour points by average temperature</button>
+  </div>
+  <table class="dt" id="a3table">
+    <caption>Table: within each temperature band, the sales–incidents link mostly disappears</caption>
+    <thead><tr><th>Temperature band</th><th>Months</th><th>Correlation r</th></tr></thead>
+    <tbody id="a3rows"></tbody>
+  </table>
+  <div class="fb" id="a3fb" role="status"></div>
+  <div class="quiz" role="radiogroup" aria-labelledby="a3q">
+    <p id="a3q"><strong>Checkpoint.</strong> Sales and incidents really do move together. What is the most defensible conclusion?</p>
+    <label><input type="radio" name="a3" value="a"> Ice-cream causes drowning — ban it</label>
+    <label><input type="radio" name="a3" value="b"> The link is imaginary — the chart is wrong</label>
+    <label><input type="radio" name="a3" value="c"> A third factor (hot weather) drives both; association alone is not causation</label>
+  </div>
+  <h3>Your turn — write a careful headline</h3>
+  <p>Combine what you saw: a claim, the observation behind it, and one limitation. Example shape: <em>"X rose with Y in Z months — but a third factor may explain both."</em></p>
+  <textarea id="a3text" maxlength="240" aria-label="Write your own careful headline"></textarea>
+  <div class="fb" id="a3fb2" role="status"></div>
+  <div class="controls">
+    <button class="btn" id="a3check">Check</button>
+    <button class="btn ghost" id="a3hint">Hint</button>
+    <button class="btn secondary" id="a3done" disabled>Finish the investigation</button>
+  </div>
+</section>
+
+<!-- ============ SUMMARY ============ -->
+<section id="view-sum" class="summary-box" hidden>
+  <h2>Case closed — your verdict</h2>
+  <div id="sumbody"></div>
+  <h3>Your careful headline</h3>
+  <p id="sumheadline" style="font-style:italic"></p>
+  <h3>Carry this forward</h3>
+  <p>Next time a chart shocks you, ask three questions: <strong>Where does the axis start? Who was asked? What else moves with both?</strong> For practice, find one chart in this week's news and check its axis range — most honest charts start at zero for bars.</p>
+  <button class="btn secondary" id="resetall">Restart the lesson</button>
+</section>
+
+<footer>
+  <p><strong>About the data.</strong> Every dataset is synthetic and generated in your browser from documented recipes (see README/EDUCATOR_GUIDE). People, places, shops and headlines are fictional; no real scientific findings are implied. Nothing is collected or transmitted.</p>
+</footer>
+</div>
+
+<script>
+"use strict";
+/* ---------- seeded RNG (mulberry32) for reproducible sampling ---------- */
+function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rng=mulberry32(20260914);
+/* ---------- state ---------- */
+const S={done:{a1:false,a2:false,a3:false},samples:[],seed:20260914};
+const $=id=>document.getElementById(id);
+const VIEWS=["intro","a1","a2","a3","sum"];
+function show(v){
+  VIEWS.forEach(x=>{$("view-"+x).hidden=x!==v});
+  VIEWS.forEach(x=>{const b=$("tab-"+x);if(b)b.setAttribute("aria-current",x===v?"true":"false")});
+  const btn=$("tab-"+v);if(btn)btn.focus();
+}
+VIEWS.forEach(v=>{const b=$("tab-"+v);if(b)b.onclick=()=>show(v)});
+function progress(){const n=[S.done.a1,S.done.a2,S.done.a3].filter(Boolean).length;
+  $("progfill").style.width=(n/3*100)+"%";$("progbar").setAttribute("aria-valuenow",n);
+  if(n===3)$("tab-sum").disabled=false;}
+$("start").onclick=()=>show("a1");
+
+/* ================= DATA (synthetic, documented) ================= */
+/* Case 1: weekly quiz-score improvement (points) for two fictional groups.
+   Group B mean is 2.4 pts higher; effect is real but modest. */
+const A1={a:16.2,b:18.6};            /* means, points/week */
+/* Case 2: population of 600 fictional students; 50% in Coding Club.
+   e-book preference: club 92%, non-club 28% -> true mean 60%. */
+const POP=[];{const r=mulberry32(4242);
+  for(let i=0;i<600;i++){const club=i<300;POP.push({club,eb:r()<(club?0.92:0.28)});}}
+const TRUEPOP=POP.filter(p=>p.eb).length/POP.length;
+/* Case 3: 12 fictional months; temperature drives both sales & incidents. */
+const A3=[];{const r=mulberry32(777);
+  const temps=[6,8,11,15,19,24,28,29,25,20,13,8];
+  temps.forEach((t,m)=>{const sales=Math.round(120+t*22+r()*40);
+    const inc=Math.round(2+t*0.55+r()*3);
+    A3.push({m:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m],t,sales,inc});});}
+function pearson(xs,ys){const n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let s=0,sx=0,sy=0;for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;s+=dx*dy;sx+=dx*dx;sy+=dy*dy}
+  return sx&&sy?s/Math.sqrt(sx*sy):0}
+window.__DD={A1,POP,TRUEPOP,A3,pearson}; /* exposed for automated tests */
+
+/* ================= ACTIVITY 1 ================= */
+function drawA1(start){
+  const w=560,h=300,pad=44,bw=90,max=20;
+  const vals=[A1.a,A1.b],names=["A (self-study)","B (study group)"];
+  const y=v=>h-pad-((Math.max(v,start)-start)/(max-start))*(h-2*pad);
+  const zeroY=y(start);
+  let s=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="presentation">`;
+  for(let g=start;g<=max;g+=start>0?1:5){const yy=y(g);
+    s+=`<line x1="${pad}" y1="${yy}" x2="${w-14}" y2="${yy}" stroke="#38434f" stroke-width="1"/>`;
+    s+=`<text x="${pad-8}" y="${yy+4}" text-anchor="end">${g}</text>`;}
+  vals.forEach((v,i)=>{const x=pad+70+i*230,bh=zeroY-y(v);
+    s+=`<rect class="bar${i?"2":""}" x="${x}" y="${y(v)}" width="${bw}" height="${Math.max(bh,2)}"/>`;
+    s+=`<text class="axislbl" x="${x+bw/2}" y="${y(v)-8}" text-anchor="middle">${v.toFixed(1)}</text>`;
+    s+=`<text class="axislbl" x="${x+bw/2}" y="${h-pad+18}" text-anchor="middle">${names[i]}</text>`;});
+  s+=`<text class="axislbl" x="${pad-30}" y="18">points/wk</text>`;
+  s+=`<line x1="${pad}" y1="${zeroY}" x2="${w-14}" y2="${zeroY}" stroke="#e8e4da" stroke-width="2"/>`;
+  $("a1chart").innerHTML=s+"</svg>";
+}
+$("a1ta").textContent=A1.a.toFixed(1);$("a1tb").textContent=A1.b.toFixed(1);
+drawA1(0);
+$("a1axis").addEventListener("input",e=>{const v=+e.target.value;$("a1axv").textContent=v.toFixed(1);drawA1(v);
+  if(v>=12)$("a1fb").className="fb show",$("a1fb").innerHTML='<span class="mark">Look:</span> at this axis the difference looks huge — yet the table above has not moved.';});
+$("a1hint").onclick=()=>{$("a1fb").className="fb show";$("a1fb").innerHTML='<span class="mark">Hint:</span> compare the bar heights at axis 0 and axis 15 — then check whether the numbers in the table changed.'};
+$("a1check").onclick=()=>{const sel=document.querySelector('input[name=a1]:checked');
+  if(!sel){$("a1fb").className="fb show bad";$("a1fb").innerHTML='<span class="mark">?</span> Pick an answer first.';return}
+  if(sel.value==="b"){$("a1fb").className="fb show good";$("a1fb").innerHTML='<span class="mark">Correct.</span> Same data, different crop. The gap is a real 2.4 points — worth reporting, but the picture exaggerated it. An honest version starts the axis at 0 and says the number out loud.';S.done.a1=true;$("a1next").disabled=false;progress()}
+  else{$("a1fb").className="fb show bad";$("a1fb").innerHTML='<span class="mark">Not quite.</span> Drag the slider to 15, then read the table again — did any number move? Try again.'}};
+$("a1next").onclick=()=>show("a2");
+
+/* ================= ACTIVITY 2 ================= */
+function sample(method,n){
+  const r=mulberry32(++S.seed);
+  const out=[];let guard=0;
+  if(method==="workshop"){ /* biased: only club members are at the workshop */
+    while(out.length<n&&guard++<1e5){const p=POP[(r()*600)|0];if(p.club)out.push(p)}}
+  else if(method==="workshop-big"){
+    while(out.length<n&&guard++<1e6){const p=POP[(r()*600)|0];if(p.club)out.push(p)}}
+  else{while(out.length<n)out.push(POP[(r()*600)|0])}
+  const est=out.filter(p=>p.eb).length/out.length;
+  S.samples.push({method,n,est});
+  return est;
+}
+function renderA2(){
+  const rows=S.samples.map((s,i)=>`<tr><td>#${i+1}</td><td>${s.method==="workshop"?"Coding-workshop door":s.method==="workshop-big"?"Workshop door (×10)":"Full register"}</td><td>${s.n}</td><td>${(s.est*100).toFixed(0)}%</td></tr>`).join("");
+  $("a2rows").innerHTML=rows||'<tr><td colspan="4" class="small">No samples yet — draw one above.</td></tr>';
+  const w=560,h=250,pad=40;
+  let s=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="presentation">`;
+  const y=v=>h-pad-(v/100)*(h-2*pad);
+  for(let g=0;g<=100;g+=20){s+=`<line x1="${pad}" y1="${y(g)}" x2="${w-14}" y2="${y(g)}" stroke="#38434f"/><text x="${pad-8}" y="${y(g)+4}" text-anchor="end">${g}%</text>`}
+  const ty=y(TRUEPOP*100);
+  s+=`<line x1="${pad}" y1="${ty}" x2="${w-14}" y2="${ty}" stroke="#8fbf7f" stroke-width="2" stroke-dasharray="6 4"/><text x="${w-16}" y="${ty-6}" text-anchor="end" fill="#8fbf7f">true value ${(TRUEPOP*100).toFixed(0)}%</text>`;
+  S.samples.forEach((sm,i)=>{const x=pad+30+i*Math.min(60,(w-pad-60)/Math.max(S.samples.length,1));
+    s+=`<rect class="${sm.method==="fair"?"bar2":"bar"}" x="${x}" y="${y(sm.est*100)}" width="34" height="${h-pad-y(sm.est*100)}"/>`;});
+  $("a2chart").innerHTML=s+"</svg>";
+}
+[["a2biased","workshop",40],["a2fair","fair",40],["a2big","workshop-big",400]].forEach(([id,m,n])=>{
+  $(id).onclick=()=>{sample(m,n);renderA2();
+    const last=S.samples[S.samples.length-1];
+    $("a2fb").className="fb show";
+    $("a2fb").innerHTML=`<span class="mark">Sample drawn:</span> ${last.n} people → ${(last.est*100).toFixed(0)}% prefer e-books. ${m==="workshop-big"?"Even at 400 the workshop estimate stays far off — size cannot fix who you asked.":""}`;};});
+$("a2hint").onclick=()=>{$("a2fb").className="fb show";$("a2fb").innerHTML='<span class="mark">Hint:</span> draw the workshop sample twice — it barely moves. Then draw a 400-person workshop sample and compare it to the green line.'};
+$("a2check").onclick=()=>{const sel=document.querySelector('input[name=a2]:checked');
+  if(!S.samples.length){$("a2fb").className="fb show bad";$("a2fb").innerHTML='<span class="mark">?</span> Draw at least one sample first — the buttons above.';return}
+  if(!sel){$("a2fb").className="fb show bad";$("a2fb").innerHTML='<span class="mark">?</span> Pick an answer first.';return}
+  if(sel.value==="b"){$("a2fb").className="fb show good";$("a2fb").innerHTML='<span class="mark">Correct.</span> The workshop crowd was mostly Coding Club — the method, not the sample size, decided the answer. A fair question for any survey: who could not possibly be in it?';S.done.a2=true;$("a2next").disabled=false;progress()}
+  else{$("a2fb").className="fb show bad";$("a2fb").innerHTML='<span class="mark">Not quite.</span> Draw the 400-person workshop sample — does it land on the green line? Try again.'}};
+$("a2next").onclick=()=>show("a3");
+
+/* ================= ACTIVITY 3 ================= */
+let a3strat=false;
+function band(t){return t<12?"cool":t<22?"mild":"hot"}
+function drawA3(){
+  const w=560,h=300,pad=46,xmax=800,ymax=20;
+  const x=v=>pad+(v/xmax)*(w-2*pad),y=v=>h-pad-(v/ymax)*(h-2*pad);
+  const col={cool:"#6fb3a8",mild:"#e0a458",hot:"#d97b6c"};
+  let s=`<svg class="chart" viewBox="0 0 ${w} ${h}" role="presentation">`;
+  for(let g=0;g<=ymax;g+=5){s+=`<line x1="${pad}" y1="${y(g)}" x2="${w-14}" y2="${y(g)}" stroke="#38434f"/><text x="${pad-8}" y="${y(g)+4}" text-anchor="end">${g}</text>`}
+  for(let g=0;g<=xmax;g+=200){s+=`<text x="${x(g)}" y="${h-pad+18}" text-anchor="middle">${g}</text>`}
+  A3.forEach(d=>{const c=a3strat?col[band(d.t)]:"#e0a458";
+    s+=`<circle class="pt" cx="${x(d.sales)}" cy="${y(d.inc)}" r="7" fill="${c}"><title>${d.m}: ${d.sales} cones, ${d.inc} incidents, ${d.t}°C</title></circle>`;});
+  s+=`<text class="axislbl" x="${(w)/2}" y="${h-6}" text-anchor="middle">monthly ice-cream sales (cones)</text>`;
+  s+=`<text class="axislbl" x="14" y="${h/2}" transform="rotate(-90 14 ${h/2})" text-anchor="middle">drowning incidents</text>`;
+  if(a3strat){s+=`<text x="${w-16}" y="22" text-anchor="end" fill="#6fb3a8">cool &lt;12°</text><text x="${w-16}" y="38" text-anchor="end" fill="#e0a458">mild 12–21°</text><text x="${w-16}" y="54" text-anchor="end" fill="#d97b6c">hot ≥22°</text>`}
+  $("a3chart").innerHTML=s+"</svg>";
+  const rows=[["cool (<12°C)",d=>d.t<12],["mild (12–21°C)",d=>d.t>=12&&d.t<22],["hot (≥22°C)",d=>d.t>=22]]
+    .map(([n,f])=>{const g=A3.filter(f);return `<tr><td>${n}</td><td>${g.map(d=>d.m).join(", ")}</td><td>${pearson(g.map(d=>d.sales),g.map(d=>d.inc)).toFixed(2)}</td></tr>`}).join("");
+  $("a3rows").innerHTML=rows+`<tr><td><strong>all 12 months</strong></td><td>—</td><td><strong>${pearson(A3.map(d=>d.sales),A3.map(d=>d.inc)).toFixed(2)}</strong></td></tr>`;
+}
+drawA3();
+$("a3strat").onclick=e=>{a3strat=!a3strat;e.target.setAttribute("aria-pressed",a3strat);drawA3();
+  if(a3strat){$("a3fb").className="fb show";$("a3fb").innerHTML='<span class="mark">Look:</span> inside each colour the cloud flattens — same-season months barely correlate. Check the table: the strong r comes only from mixing seasons.'}};
+$("a3hint").onclick=()=>{$("a3fb").className="fb show";$("a3fb").innerHTML='<span class="mark">Hint:</span> press the colour button, then read the per-band r values in the table. What do hot months do to both numbers?'},
+$("a3check").onclick=()=>{const sel=document.querySelector('input[name=a3]:checked');const txt=$("a3text").value.trim();
+  if(!sel){$("a3fb").className="fb show bad";$("a3fb").innerHTML='<span class="mark">?</span> Pick an answer first.';return}
+  if(sel.value==="c"){
+    if(txt.length<25){$("a3fb2").className="fb show bad";$("a3fb2").innerHTML='<span class="mark">Almost.</span> The checkpoint is right — now write your own one-line headline below (claim + observation + limitation).';return}
+    $("a3fb").className="fb show good";$("a3fb").innerHTML='<span class="mark">Correct.</span> Association is a clue, not a verdict — you named the hidden variable and kept the claim honest.';
+    $("a3fb2").className="fb show good";$("a3fb2").innerHTML='<span class="mark">Headline noted.</span> That is exactly the register a careful journalist uses.';
+    S.done.a3=true;$("a3done").disabled=false;progress()}
+  else{$("a3fb").className="fb show bad";$("a3fb").innerHTML='<span class="mark">Not quite.</span> The data are real — the question is what story explains them. Colour by temperature and look again.'}};
+$("a3done").onclick=()=>{
+  $("sumheadline").textContent="“"+$("a3text").value.trim()+"”";
+  $("sumbody").innerHTML="<p>You checked a cropped axis, a biased survey and a two-variable coincidence — and found the same lesson each time: <strong>the numbers can be accurate and the story still wrong.</strong></p>";
+  show("sum")};
+$("resetall").onclick=()=>{S.done={a1:false,a2:false,a3:false};S.samples=[];S.seed=20260914;rng=mulberry32(20260914);
+  $("a1axis").value=0;$("a1axv").textContent="0.0";drawA1(0);renderA2();a3strat=false;drawA3();
+  document.querySelectorAll('input[type=radio]').forEach(r=>r.checked=false);
+  ["a1fb","a2fb","a3fb","a3fb2"].forEach(i=>{$(i).className="fb";$(i).innerHTML=""});
+  $("a3text").value="";$("a1next").disabled=$("a2next").disabled=$("a3done").disabled=true;$("tab-sum").disabled=true;
+  progress();show("intro")};
+renderA2();
+</script>
+</body>
+</html>
